@@ -4,8 +4,7 @@ import {useEffect} from "react"
 import { auth, db } from "../firebase";
 import Login from "./login";
 import Loading from "../components/Loading";
-import firebase from 'firebase/app';
-import 'firebase/firestore';
+import firebase from 'firebase';
 
 function MyApp({ Component, pageProps }) {
   const [user, loading] = useAuthState(auth);
@@ -15,13 +14,13 @@ function MyApp({ Component, pageProps }) {
       db.collection("users").doc(user.uid).set(
         {
           email: user.email,
-          lastSeen: firebase.firestore.FieldValue.serverTimeStamp(),
+          lastSeen: new Date(),
           photoURL: user.photoURL,
         },
         { merge: true }
       );
     }
-  }, []);
+  }, [user]);
 
   if (loading) return <Loading />;
   if (!user) return <Login />;
