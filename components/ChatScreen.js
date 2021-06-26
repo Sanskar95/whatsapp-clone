@@ -14,6 +14,7 @@ import EmojiEmotionsIcon from "@material-ui/icons/EmojiEmotions";
 import Message from "./Message";
 import firebase from "firebase";
 import getRecipientEmail from "../utils/getRecipientEmail";
+import TimeAgo from "timeago-react";
 
 function ChatScreen(props) {
   const [user] = useAuthState(auth);
@@ -84,9 +85,18 @@ function ChatScreen(props) {
 
         <HeaderInformation>
           <h3>{recipientEmail}</h3>
-          <p>Last Active: {''} </p>
-          {recipientSnapshot ? (recipient?.lastSeen?.toDate()) : (<Time)}
-          <p>Last Seen: {}</p>
+          {recipientSnapshot ? (
+            <p>
+              Last Active: {""}
+              {recipient?.lastSeen?.toDate() ? (
+                <TimeAgo datetime={recipient?.lastSeen?.toDate()} />
+              ) : (
+                "Not Available"
+              )}
+            </p>
+          ) : (
+            <p>Loading last Active..</p>
+          )}
         </HeaderInformation>
         <HeaderIcons>
           <IconButton>
