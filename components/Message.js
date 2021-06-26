@@ -16,7 +16,7 @@ function Message(props) {
         <Timestamp>
           {" "}
           {props.message.timestamp
-            ? moment(message.timestamp).format("LT")
+            ? moment(props.message.timestamp).format("LT")
             : "..."}
         </Timestamp>
       </TypeOfMessage>
