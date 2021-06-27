@@ -1,4 +1,4 @@
-import React , {useState} from "react";
+import React, { useState } from "react";
 import { Avatar } from "@material-ui/core";
 import styled from "styled-components";
 import ChatIcon from "@material-ui/icons/Chat";
@@ -11,46 +11,61 @@ import { auth, db } from "../firebase";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import Chat from "./Chat";
-import TextField from '@material-ui/core/TextField';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
+import TextField from "@material-ui/core/TextField";
+import Dialog from "@material-ui/core/Dialog";
+import DialogActions from "@material-ui/core/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import DialogTitle from "@material-ui/core/DialogTitle";
+import getRecipientEmail from "../utils/getRecipientEmail";
 
 function Sidebar() {
   const [user] = useAuthState(auth);
-  const [input, setInput] = React.useState("")
-  const [modalOpenFlag, setModalOpenFlag] = React.useState(false)
+  const [input, setInput] = React.useState("");
+  const [searchInput, setSearchInput] = React.useState("");
+  const [modalOpenFlag, setModalOpenFlag] = React.useState(false);
 
   const userChatRef = db
     .collection("chats")
     .where("users", "array-contains", user.email);
   const [chatsSnapshot] = useCollection(userChatRef);
 
-  const handleEmailInput = (event) =>{
-    setInput(event.target.value)
-  }
-
-  const handleModalOpen = () => {
-    setModalOpenFlag(true)
+  const handleEmailInput = (event) => {
+    setInput(event.target.value);
   };
 
+  const handleModalOpen = () => {
+    setModalOpenFlag(true);
+  };
 
-  const vaildateAndCreateChat = () =>{
+  const handleSearchInputChange = (event) => {
+    setSearchInput(event.target.value);
+  };
+
+  const getChats = () => {
+    return chatsSnapshot?.docs
+      .filter((chatObj) =>
+        getRecipientEmail(chatObj.data().users, user)
+          .toString()
+          .includes(searchInput)
+      )
+      .map((chat) => (
+        <Chat key={chat.id} id={chat.id} users={chat.data().users} />
+      ));
+  };
+
+  const vaildateAndCreateChat = () => {
     if (
-      EmailValidator.validate(input)
-      && !doesChatAlreadyExists(input) && input !== user.email
+      EmailValidator.validate(input) &&
+      !doesChatAlreadyExists(input) &&
+      input !== user.email
     ) {
       db.collection("chats").add({
         users: [user.email, input],
       });
-      setModalOpenFlag(false)
+      setModalOpenFlag(false);
     }
-   
-  }
-
-
+  };
 
   const doesChatAlreadyExists = (recipientEmail) => {
     !!chatsSnapshot?.docs.find(
@@ -74,19 +89,22 @@ function Sidebar() {
       </Header>
       <SearchContainer>
         <SearchIcon />
-        {/* <SearchInput placeholder="Search in Chats" /> */}
-        <TextField fullWidth id="outlined-basic" label="Search Chats" variant="outlined" />
-        
-
+        <TextField
+          onChange={handleSearchInputChange}
+          fullWidth
+          id="outlined-basic"
+          label="Search Chats"
+          variant="outlined"
+        />
       </SearchContainer>
 
       <SidebarButton onClick={handleModalOpen}>Start a New Chat</SidebarButton>
-      {chatsSnapshot?.docs.map((chat) => (
-        <Chat key={chat.id} id={chat.id} users={chat.data().users} />
-      ))}
+      {getChats()}
       <Dialog
         open={modalOpenFlag}
-        onClose={()=>{setModalOpenFlag(false)}}
+        onClose={() => {
+          setModalOpenFlag(false);
+        }}
         aria-labelledby="form-dialog-title"
       >
         <DialogTitle id="form-dialog-title">Create Chat</DialogTitle>
@@ -105,7 +123,12 @@ function Sidebar() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={()=>{ setModalOpenFlag(false)}} color="primary">
+          <Button
+            onClick={() => {
+              setModalOpenFlag(false);
+            }}
+            color="primary"
+          >
             Cancel
           </Button>
           <Button onClick={vaildateAndCreateChat} color="primary">
@@ -154,7 +177,7 @@ const UserAvatar = styled(Avatar)`
 
 const SidebarButton = styled(Button)`
   width: 100%;
- 
+
   &&& {
     border-top: 1px solid whitesmoke;
     border-bottom: 1px solid whitesmoke;
